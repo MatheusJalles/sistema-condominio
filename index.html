@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sistema de Gerenciamento de Entregas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#f4f3ef;--sidebar:#16202e;--sidebar-h:#1f2f42;--accent:#1d9e75;
+  --accent-l:#e1f5ee;--accent-d:#085041;--card:#fff;--border:#e2e0da;
+  --text:#1a1a18;--muted:#7a7870;--warn:#ba7517;--warn-l:#faeeda;
+  --danger:#a32d2d;--danger-l:#fcebeb;--info:#185fa5;--info-l:#e6f1fb;
+  --purple:#534ab7;--purple-l:#eeedfe;--r:10px;--rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;overflow:hidden;font-size:14px}
+
+/* ── SETUP / LOGIN ── */
+.auth-wrap{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:var(--sidebar)}
+.auth-box{background:var(--card);border-radius:16px;padding:2.25rem;width:400px;max-width:95vw}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.75rem}
+.auth-logo-icon{width:38px;height:38px;background:var(--accent);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.auth-logo-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.auth-logo-name{font-size:17px;font-weight:600}
+.auth-logo-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.auth-heading{font-size:15px;font-weight:500;color:var(--muted);margin-bottom:1.5rem}
+.auth-step-info{background:var(--accent-l);border:1px solid #9fe1cb;border-radius:var(--rs);padding:10px 13px;font-size:13px;color:var(--accent-d);margin-bottom:1.25rem;line-height:1.5}
+.setup-steps{display:flex;gap:8px;margin-bottom:1.5rem}
+.setup-step{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s}
+.setup-step.done{background:var(--accent)}
+.field{margin-bottom:.9rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--rs);
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--bg);
+  outline:none;transition:border .15s
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:#fff}
+.field textarea{resize:vertical;min-height:68px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-err{font-size:11px;color:var(--danger);margin-top:3px;display:none}
+.field.has-error input,.field.has-error select{border-color:var(--danger)}
+.field.has-error .field-err{display:block}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 17px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s;text-decoration:none;line-height:1}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent-d)}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{background:var(--border)}
+.btn-danger{background:var(--danger-l);color:var(--danger);border:1px solid #f7c1c1}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent}.btn-ghost:hover{background:var(--bg);color:var(--text)}
+.btn-sm{padding:5px 11px;font-size:12.5px}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{padding:6px;border-radius:var(--rs)}
+.btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.auth-switch{text-align:center;margin-top:1rem;font-size:13px;color:var(--muted)}
+.auth-switch a{color:var(--accent);cursor:pointer;font-weight:500}
+
+/* ── LAYOUT ── */
+#app{display:none;width:100%;height:100vh}
+#app.show{display:flex}
+aside{width:224px;min-width:224px;background:var(--sidebar);display:flex;flex-direction:column;padding:1.1rem 0;overflow-y:auto}
+.sl{display:flex;align-items:center;gap:9px;padding:0 1.1rem 1.1rem;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:.6rem}
+.sl-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sl-icon svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.sl-name{font-size:13.5px;font-weight:600;color:#fff;line-height:1.2}
+.sl-sub{font-size:10px;color:rgba(255,255,255,.35)}
+.nav-section{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);letter-spacing:.08em;text-transform:uppercase;padding:.9rem 1.1rem .35rem}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 1.1rem;margin:1px 7px;border-radius:8px;cursor:pointer;transition:all .15s;color:rgba(255,255,255,.5);font-size:13px;font-weight:400}
+.nav-item svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.nav-item:hover{background:var(--sidebar-h);color:rgba(255,255,255,.9)}
+.nav-item.active{background:rgba(29,158,117,.18);color:var(--accent);font-weight:500}
+.nav-item .n-badge{margin-left:auto;background:var(--warn);color:#fff;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.sidebar-user{margin-top:auto;padding:.9rem 1.1rem 0;border-top:1px solid rgba(255,255,255,.06)}
+.su-row{display:flex;align-items:center;gap:8px}
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.av-s{background:rgba(29,158,117,.22);color:var(--accent)}
+.av-p{background:rgba(83,74,183,.22);color:var(--purple)}
+.su-name{font-size:12px;font-weight:500;color:rgba(255,255,255,.8);line-height:1.2}
+.su-role{font-size:10px;color:rgba(255,255,255,.35)}
+.logout-btn{margin-top:8px;width:100%;padding:6px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:6px;color:rgba(255,255,255,.4);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.logout-btn:hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7)}
+main{flex:1;overflow-y:auto;padding:1.75rem 2rem}
+.page{display:none}.page.active{display:block}
+.page-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:12px}
+.page-title{font-size:20px;font-weight:600}
+.page-sub{font-size:13px;color:var(--muted);margin-top:3px}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.5rem}
+.stat-card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);padding:1rem 1.15rem}
+.stat-label{font-size:11.5px;color:var(--muted);font-weight:500;margin-bottom:5px}
+.stat-val{font-size:26px;font-weight:600;line-height:1}
+.sv-warn{color:var(--warn)}.sv-ok{color:var(--accent)}.sv-info{color:var(--info)}
+
+/* ── CARD / TABLE ── */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);margin-bottom:1rem}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--border)}
+.card-title{font-size:13.5px;font-weight:600}
+.card-body{padding:.9rem 1rem}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.td-actions{display:flex;gap:5px;white-space:nowrap}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.b-pend{background:var(--warn-l);color:var(--warn)}
+.b-done{background:var(--accent-l);color:var(--accent-d)}
+.b-sindica{background:var(--accent-l);color:var(--accent-d)}
+.b-porteiro{background:var(--purple-l);color:var(--purple)}
+.b-inactive{background:var(--danger-l);color:var(--danger)}
+.b-active{background:var(--accent-l);color:var(--accent-d)}
+
+/* ── PLATES ── */
+.plate{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;background:#f4f3ef;color:var(--text);padding:2px 7px;border-radius:4px;border:1px solid var(--border);display:inline-block;margin:2px 2px 2px 0;white-space:nowrap}
+.plate-match{background:var(--warn-l);color:#412402;border-color:#fac775}
+
+/* ── SEARCH ── */
+.srch-wrap{position:relative;margin-bottom:1rem}
+.srch-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2}
+.srch-input{width:100%;padding:10px 12px 10px 34px;font-size:14px;font-family:'DM Sans',sans-serif;border:1px solid var(--border);border-radius:var(--r);background:var(--card);color:var(--text);outline:none;transition:border .15s}
+.srch-input:focus{border-color:var(--accent);background:#fff}
+.srch-input.sm{font-size:13px;padding:8px 12px 8px 32px}
+.srch-tabs{display:flex;gap:5px;margin-bottom:1.1rem}
+.srch-tab{padding:5px 13px;border-radius:20px;font-size:13px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+.srch-tab.active{background:var(--accent-l);color:var(--accent-d);border-color:#9fe1cb;font-weight:500}
+
+/* ── RESULT CARDS ── */
+.res-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:7px;cursor:pointer;transition:all .15s}
+.res-card:hover{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,158,117,.08)}
+.res-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.res-name{font-size:13.5px;font-weight:600}
+.res-apt{font-size:12px;color:var(--muted);margin-top:2px}
+.res-enc{font-size:12px;color:var(--warn);margin-top:5px;display:flex;align-items:center;gap:5px}
+.res-enc::before{content:'';width:6px;height:6px;background:var(--warn);border-radius:50%;flex-shrink:0}
+.res-vehs{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.sec-div{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 .5rem;display:flex;align-items:center;gap:8px}
+.sec-div span{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1px 7px;font-size:10px}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:13.5px}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.1rem}
+.tab-bar-btn{padding:8px 17px;font-size:13px;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--muted);font-weight:500;margin-bottom:-1px;transition:all .15s}
+.tab-bar-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── MODAL ── */
+.modal-ov{position:fixed;inset:0;background:rgba(22,32,46,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal-ov.open{display:flex}
+.modal{background:var(--card);border-radius:14px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:1.6rem}
+.modal.lg{max-width:560px}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem}
+.modal-title{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--bg)}
+.modal-close svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem;padding-top:1rem;border-top:1px solid var(--border)}
+
+/* ── SUBLIST ── */
+.sublist{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-top:4px}
+.sublist-item{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;border-bottom:1px solid var(--border);font-size:12.5px;gap:6px}
+.sublist-item:last-child{border-bottom:none}
+.sublist-empty{padding:8px 10px;color:var(--muted);font-size:12.5px;font-style:italic}
+.add-row{display:flex;gap:6px;margin-top:6px;align-items:center}
+.add-row input{flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--bg);color:var(--text);outline:none}
+.add-row input:focus{border-color:var(--accent);background:#fff}
+.add-row input.mono{font-family:'DM Mono',monospace}
+.mini-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 4px;display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--sidebar);color:#fff;padding:10px 17px;border-radius:var(--rs);font-size:13px;z-index:200;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;max-width:310px;line-height:1.4}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--accent-d)}
+.toast.err{background:var(--danger)}
+
+/* ── DETAIL ── */
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.75rem}
+.det-f .det-l{font-size:11px;color:var(--muted);margin-bottom:2px}
+.det-f .det-v{font-size:13px;font-weight:500}
+.det-sec-title{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 5px}
+
+/* ── CONFIRM ── */
+.confirm-msg{font-size:13.5px;color:var(--muted);line-height:1.55;margin-bottom:1.25rem}
+
+/* Dropdown autocomplete */
+.dropdown{border:1px solid var(--border);border-radius:var(--rs);max-height:170px;overflow-y:auto;margin-top:3px;background:var(--card);display:none;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.dropdown.open{display:block}
+.dropdown-item{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)}
+.dropdown-item:last-child{border-bottom:none}
+.dropdown-item:hover{background:var(--bg)}
+.dropdown-item strong{font-weight:500}
+.dropdown-item span{color:var(--muted);font-size:12px}
+.selected-morador{background:var(--accent-l);border:1px solid #9fe1cb;border-radius:var(--rs);padding:8px 11px;font-size:13px;color:var(--accent-d);margin-bottom:.9rem;display:none;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- ══ FIRST-RUN SETUP ══ -->
+<div class="auth-wrap" id="setup-screen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+      <div><div class="auth-logo-name">Sistema de Gerenciamento de Entregas</div><div class="auth-logo-sub">Configuração inicial</div></div>
+    </div>
+    <div class="setup-steps"><div class="setup-step done" id="step1"></div><div class="setup-step" id="step2"></div></div>
+    <div id="setup-step1">
+      <div class="auth-heading">Passo 1 de 2 — Nome do condomínio</div>
+      <div class="auth-step-info">Este é o primeiro acesso. Vamos configurar o sistema em 2 passos.</div>
+      <div class="field"><label>Nome do condomínio</label><input type="text" id="setup-condo-nome" placeholder="Ex: Residencial das Flores"/><div class="field-err" id="err-condo-nome">Informe o nome do condomínio</div></div>
+      <div class="field"><label>Número de blocos</label><select id="setup-blocos"><option value="1">1 bloco</option><option value="2">2 blocos</option><option value="3">3 blocos</option><option value="4">4 blocos</option><option value="5">5 blocos</option><option value="6">6 blocos</option><option value="7">7 blocos</option><option value="8">8 blocos</option><option value="9">9 blocos</option><option value="10">10 blocos</option><option value="11">11 blocos</option><option value="12" selected>12 blocos</option></select></div>
+      <button class="btn btn-primary btn-full" onclick="setupStep1()">Próximo →</button>
+    </div>
+    <div id="setup-step2" style="display:none">
+      <div class="auth-heading">Passo 2 de 2 — Conta da síndica</div>
+      <div class="auth-step-info">Crie a conta de administradora. Somente a síndica pode criar e gerenciar porteiros.</div>
+      <div class="field"><label>Nome completo</label><input type="text" id="setup-nome" placeholder="Nome da síndica"/><div class="field-err" id="err-setup-nome">Informe o nome</div></div>
+      <div class="field"><label>E-mail</label><input type="email" id="setup-email" placeholder="sindica@email.com"/><div class="field-err" id="err-setup-email">E-mail inválido</div></div>
+      <div class="field"><label>Senha</label><input type="password" id="setup-senha" placeholder="Mínimo 6 caracteres"/><div class="field-err" id="err-setup-senha">Mínimo 6 caracteres</div></div>
+      <div class="field"><label>Confirmar senha</label><input type="password" id="setup-senha2" placeholder="Repita a senha"/><div class="field-err" id="err-setup-senha2">As senhas não coincidem</div></div>
+      <button class="btn btn-primary btn-full" onclick="setupFinish()">Criar conta e entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGIN ══ -->
+<div class="auth-wrap" id="login-screen" style="display:none">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+      <div><div class="auth-logo-name">Sistema de Gerenciamento de Entregas</div><div class="auth-logo-sub" id="login-condo-sub"></div></div>
+    </div>
+    <div class="auth-heading">Entrar no sistema</div>
+    <div class="field"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/><div class="field-err" id="err-login-email">E-mail inválido</div></div>
+    <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"/><div class="field-err" id="err-login-senha">E-mail ou senha incorretos</div></div>
+    <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:.25rem">Entrar</button>
+    <div id="login-error" style="display:none;text-align:center;font-size:12.5px;color:var(--danger);margin-top:.75rem"></div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <aside>
+    <div class="sl">
+      <div class="sl-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+      <div><div class="sl-name">Entregas</div><div class="sl-sub" id="sb-condo-name"></div></div>
+    </div>
+    <div id="nav-porteiro">
+      <div class="nav-section">Operações</div>
+      <div class="nav-item" id="ni-pesquisa" onclick="go('pesquisa')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Pesquisa Rápida</div>
+      <div class="nav-item" id="ni-encomendas" onclick="go('encomendas')"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Encomendas<span class="n-badge" id="nb1" style="display:none">0</span></div>
+    </div>
+    <div id="nav-sindica" style="display:none">
+      <div class="nav-section">Painel</div>
+      <div class="nav-item" id="ni-dashboard" onclick="go('dashboard')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</div>
+      <div class="nav-section">Cadastros</div>
+      <div class="nav-item" id="ni-moradores" onclick="go('moradores')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Moradores</div>
+      <div class="nav-item" id="ni-porteiros" onclick="go('porteiros')"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Porteiros</div>
+      <div class="nav-section">Operações</div>
+      <div class="nav-item" id="ni-pesquisa2" onclick="go('pesquisa')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Pesquisa Rápida</div>
+      <div class="nav-item" id="ni-encomendas2" onclick="go('encomendas')"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Encomendas<span class="n-badge" id="nb2" style="display:none">0</span></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="su-row"><div class="avatar" id="sb-av"></div><div><div class="su-name" id="sb-nome"></div><div class="su-role" id="sb-role"></div></div></div>
+      <button class="logout-btn" onclick="doLogout()">Sair da conta</button>
+    </div>
+  </aside>
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="page" id="page-dashboard">
+      <div class="page-hdr"><div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-date"></div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Encomendas pendentes</div><div class="stat-val sv-warn" id="d-pend">0</div></div>
+        <div class="stat-card"><div class="stat-label">Entregues hoje</div><div class="stat-val sv-ok" id="d-hoje">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total moradores</div><div class="stat-val" id="d-mor">0</div></div>
+        <div class="stat-card"><div class="stat-label">Porteiros ativos</div><div class="stat-val sv-info" id="d-port">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><div class="card-title">Últimas encomendas</div></div>
+        <div class="tbl-wrap"><table><thead><tr><th>Morador</th><th>Bloco/Apto</th><th>Descrição</th><th>Chegada</th><th>Status</th></tr></thead><tbody id="dash-rows"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- PESQUISA -->
+    <div class="page" id="page-pesquisa">
+      <div class="page-hdr"><div><div class="page-title">Pesquisa Rápida</div><div class="page-sub">Nome, bloco/apartamento ou placa de veículo</div></div></div>
+      <div class="srch-wrap"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="srch-input" id="srch-q" type="text" placeholder="Nome, bloco/apto, placa..." oninput="doSearch()"/></div>
+      <div class="srch-tabs">
+        <button class="srch-tab active" onclick="setSrchTab('todos',this)">Todos</button>
+        <button class="srch-tab" onclick="setSrchTab('moradores',this)">Moradores</button>
+        <button class="srch-tab" onclick="setSrchTab('veiculos',this)">Veículos</button>
+      </div>
+      <div id="srch-results"><div class="empty-state">Digite pelo menos 2 caracteres para buscar.</div></div>
+    </div>
+
+    <!-- ENCOMENDAS -->
+    <div class="page" id="page-encomendas">
+      <div class="page-hdr">
+        <div><div class="page-title">Encomendas</div><div class="page-sub" id="enc-sub"></div></div>
+        <button class="btn btn-primary" onclick="openNovaEnc()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nova Encomenda</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-bar-btn active" onclick="setEncTab('pendentes',this)">Pendentes</button>
+        <button class="tab-bar-btn" onclick="setEncTab('entregues',this)">Entregues</button>
+        <button class="tab-bar-btn" onclick="setEncTab('todas',this)">Todas</button>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Morador</th><th>Bloco/Apto</th><th>Descrição</th><th>Chegada</th><th>Status</th><th>Ações</th></tr></thead><tbody id="enc-rows"></tbody></table></div></div>
+    </div>
+
+    <!-- MORADORES -->
+    <div class="page" id="page-moradores">
+      <div class="page-hdr">
+        <div><div class="page-title">Moradores</div><div class="page-sub" id="mor-sub"></div></div>
+        <button class="btn btn-primary" onclick="openMorModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Morador</button>
+      </div>
+      <div class="srch-wrap" style="max-width:320px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="srch-input sm" type="text" placeholder="Filtrar por nome ou apartamento..." oninput="renderMoradores(this.value)"/></div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>Bloco</th><th>Apto</th><th>Telefone</th><th>Veículos</th><th>Encomendas</th><th>Ações</th></tr></thead><tbody id="mor-rows"></tbody></table></div></div>
+    </div>
+
+    <!-- PORTEIROS -->
+    <div class="page" id="page-porteiros">
+      <div class="page-hdr">
+        <div><div class="page-title">Porteiros</div><div class="page-sub">Gerenciamento de acesso — exclusivo da síndica</div></div>
+        <button class="btn btn-primary" onclick="openPortModal()"><svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Novo Porteiro</button>
+      </div>
+      <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Turno</th><th>Status</th><th>Cadastrado em</th><th>Ações</th></tr></thead><tbody id="port-rows"></tbody></table></div></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ MODAL: Nova Encomenda ══ -->
+<div class="modal-ov" id="m-enc">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title">Registrar Encomenda</div><button class="modal-close" onclick="closeModal('m-enc')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="field">
+      <label>Buscar morador</label>
+      <input type="text" id="enc-srch" placeholder="Nome ou apartamento..." autocomplete="off" oninput="encSrchMor(this.value)"/>
+      <div class="dropdown" id="enc-dd"></div>
+      <input type="hidden" id="enc-mor-id"/>
+    </div>
+    <div class="selected-morador" id="enc-mor-sel"></div>
+    <div class="field"><label>Descrição da encomenda</label><input type="text" id="enc-desc" placeholder="Ex: Caixa Amazon, envelope Correios..."/><div class="field-err" id="err-enc-desc">Descreva a encomenda</div></div>
+    <div class="field"><label>Transportadora <span style="color:var(--muted);font-weight:400">(opcional)</span></label><input type="text" id="enc-transp" placeholder="Ex: Correios, Mercado Livre, Amazon..."/></div>
+    <div class="field"><label>Observações <span style="color:var(--muted);font-weight:400">(opcional)</span></label><textarea id="enc-obs" placeholder="Embalagem com avaria, volume grande..."></textarea></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-enc')">Cancelar</button><button class="btn btn-primary" onclick="salvarEnc()">Registrar e Notificar</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Morador ══ -->
+<div class="modal-ov" id="m-mor">
+  <div class="modal lg">
+    <div class="modal-hdr"><div class="modal-title" id="m-mor-title">Novo Morador</div><button class="modal-close" onclick="closeModal('m-mor')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="field"><label>Nome completo</label><input type="text" id="mor-nome" placeholder="Nome completo do morador"/><div class="field-err" id="err-mor-nome">Informe o nome</div></div>
+    <div class="field-row">
+      <div class="field"><label>Bloco</label><select id="mor-bloco"></select></div>
+      <div class="field"><label>Apartamento</label><select id="mor-apto"></select></div>
+    </div>
+    <div class="field"><label>Telefone / WhatsApp</label><input type="text" id="mor-tel" placeholder="+55 31 9 9999-8888"/><div class="field-err" id="err-mor-tel">Informe o telefone</div></div>
+
+    <span class="mini-label">Veículos</span>
+    <div class="sublist" id="sl-veiculos"></div>
+    <div class="add-row">
+      <input class="mono" id="v-placa" placeholder="Placa (ABC-1234)" style="max-width:140px"/>
+      <input id="v-modelo" placeholder="Modelo (ex: Honda Civic, CG Fan)"/>
+      <button class="btn btn-secondary btn-sm" onclick="addVei()">+ Adicionar</button>
+    </div>
+
+    <span class="mini-label">Contatos de Emergência</span>
+    <div class="sublist" id="sl-emg"></div>
+    <div class="add-row">
+      <input id="e-nome" placeholder="Nome do contato"/>
+      <input id="e-tel" placeholder="Telefone" style="max-width:160px"/>
+      <button class="btn btn-secondary btn-sm" onclick="addEmg()">+ Adicionar</button>
+    </div>
+
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-mor')">Cancelar</button><button class="btn btn-primary" onclick="salvarMor()">Salvar Morador</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Porteiro ══ -->
+<div class="modal-ov" id="m-port">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="m-port-title">Novo Porteiro</div><button class="modal-close" onclick="closeModal('m-port')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="field"><label>Nome completo</label><input type="text" id="port-nome" placeholder="Nome do porteiro"/><div class="field-err" id="err-port-nome">Informe o nome</div></div>
+    <div class="field"><label>E-mail</label><input type="email" id="port-email" placeholder="porteiro@email.com"/><div class="field-err" id="err-port-email">E-mail inválido</div></div>
+    <div class="field" id="field-port-senha"><label>Senha inicial</label><input type="password" id="port-senha" placeholder="Mínimo 6 caracteres"/><div class="field-err" id="err-port-senha">Mínimo 6 caracteres</div></div>
+    <div class="field"><label>Turno</label><select id="port-turno"><option value="diurno">Diurno (06h–18h)</option><option value="noturno">Noturno (18h–06h)</option><option value="folguista">Folguista</option></select></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-port')">Cancelar</button><button class="btn btn-primary" onclick="salvarPort()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Retirada ══ -->
+<div class="modal-ov" id="m-retirada">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-hdr"><div class="modal-title">Confirmar Retirada</div><button class="modal-close" onclick="closeModal('m-retirada')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div id="ret-info" style="background:var(--bg);border-radius:var(--rs);padding:11px 13px;margin-bottom:.9rem;font-size:13px;line-height:1.7"></div>
+    <div class="field"><label>Retirado por</label><input type="text" id="ret-por" placeholder="Nome de quem retirou"/><div class="field-err" id="err-ret-por">Informe quem retirou</div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-retirada')">Cancelar</button><button class="btn btn-primary" onclick="confirmarRet()">Confirmar Retirada</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Ver Morador ══ -->
+<div class="modal-ov" id="m-ver-mor">
+  <div class="modal lg">
+    <div class="modal-hdr"><div class="modal-title" id="vm-nome"></div><button class="modal-close" onclick="closeModal('m-ver-mor')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div id="vm-body"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-ver-mor')">Fechar</button><button class="btn btn-primary" id="vm-edit-btn">Editar Morador</button></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Excluir ══ -->
+<div class="modal-ov" id="m-confirm">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-hdr"><div class="modal-title" id="confirm-title">Confirmar</div><button class="modal-close" onclick="closeModal('m-confirm')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('m-confirm')">Cancelar</button><button class="btn btn-danger" id="confirm-ok">Confirmar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════
+const APTOS = ['101','102','103','104','201','202','203','204','301','302','303','304','401','402','403','404'];
+
+// ════════════════════════════════════════════════
+//  PERSISTENCE
+// ════════════════════════════════════════════════
+function save(key, val){ try{ localStorage.setItem('cge_'+key, JSON.stringify(val)); }catch(e){} }
+function load(key, def){ try{ const v=localStorage.getItem('cge_'+key); return v!==null?JSON.parse(v):def; }catch(e){ return def; } }
+
+let DB = {
+  condo:    load('condo',    null),
+  usuarios: load('usuarios', []),
+  moradores:load('moradores',[]),
+  encomendas:load('encomendas',[]),
+};
+
+function persist(){ save('condo',DB.condo); save('usuarios',DB.usuarios); save('moradores',DB.moradores); save('encomendas',DB.encomendas); }
+
+// ════════════════════════════════════════════════
+//  UTILS
+// ════════════════════════════════════════════════
+function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-\s]/g,''); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDateShort(iso){ if(!iso) return '—'; return new Date(iso).toLocaleDateString('pt-BR'); }
+function initials(nome){ return nome.trim().split(/\s+/).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
+function hashPwd(s){ let h=0; for(let i=0;i<s.length;i++){h=Math.imul(31,h)+s.charCodeAt(i)|0;} return h.toString(36); }
+function validEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+function toast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast '+(type||''); t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function showErr(id,msg){ const el=document.getElementById(id); if(el){if(msg)el.textContent=msg; el.closest('.field')?.classList.add('has-error');} }
+function clearErrs(){ document.querySelectorAll('.field.has-error').forEach(f=>f.classList.remove('has-error')); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+function init(){
+  if(!DB.condo || !DB.usuarios.find(u=>u.perfil==='sindica')){
+    document.getElementById('setup-screen').style.display='flex';
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('login-condo-sub').textContent=DB.condo.nome;
+  }
+}
+
+// ════════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════════
+function setupStep1(){
+  clearErrs();
+  const nome=document.getElementById('setup-condo-nome').value.trim();
+  if(!nome){ showErr('err-condo-nome'); return; }
+  DB.condo={ nome, blocos:parseInt(document.getElementById('setup-blocos').value) };
+  persist();
+  document.getElementById('setup-step1').style.display='none';
+  document.getElementById('setup-step2').style.display='';
+  document.getElementById('step2').classList.add('done');
+}
+
+function setupFinish(){
+  clearErrs();
+  let ok=true;
+  const nome=document.getElementById('setup-nome').value.trim();
+  const email=document.getElementById('setup-email').value.trim();
+  const senha=document.getElementById('setup-senha').value;
+  const senha2=document.getElementById('setup-senha2').value;
+  if(!nome){ showErr('err-setup-nome'); ok=false; }
+  if(!validEmail(email)){ showErr('err-setup-email'); ok=false; }
+  if(senha.length<6){ showErr('err-setup-senha'); ok=false; }
+  if(senha!==senha2){ showErr('err-setup-senha2'); ok=false; }
+  if(!ok) return;
+  const user={ id:uid(), nome, email:email.toLowerCase(), pwdHash:hashPwd(senha), perfil:'sindica', ativo:true, criadoEm:new Date().toISOString(), criadoPor:null };
+  DB.usuarios.push(user);
+  persist();
+  document.getElementById('setup-screen').style.display='none';
+  startApp(user);
+}
+
+// ════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════
+let session=null;
+
+function doLogin(){
+  clearErrs();
+  const email=document.getElementById('login-email').value.trim().toLowerCase();
+  const senha=document.getElementById('login-senha').value;
+  const errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  if(!validEmail(email)){ showErr('err-login-email'); return; }
+  const user=DB.usuarios.find(u=>u.email===email && u.pwdHash===hashPwd(senha) && u.ativo);
+  if(!user){ errEl.textContent='E-mail ou senha incorretos.'; errEl.style.display=''; return; }
+  document.getElementById('login-screen').style.display='none';
+  startApp(user);
+}
+
+function doLogout(){
+  session=null;
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-senha').value='';
+}
+
+function startApp(user){
+  session=user;
+  document.getElementById('app').classList.add('show');
+  document.getElementById('sb-nome').textContent=user.nome;
+  document.getElementById('sb-role').textContent=user.perfil==='sindica'?'Síndica':'Porteiro';
+  document.getElementById('sb-condo-name').textContent=DB.condo?.nome||'';
+  const av=document.getElementById('sb-av');
+  av.textContent=initials(user.nome);
+  av.className='avatar '+(user.perfil==='sindica'?'av-s':'av-p');
+
+  populateBlocoApto();
+
+  if(user.perfil==='sindica'){
+    document.getElementById('nav-sindica').style.display='';
+    document.getElementById('nav-porteiro').style.display='none';
+    go('dashboard');
+  } else {
+    document.getElementById('nav-sindica').style.display='none';
+    document.getElementById('nav-porteiro').style.display='';
+    go('pesquisa');
+  }
+  updateBadges();
+}
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+const PAGE_NAV_MAP={
+  dashboard:['ni-dashboard'],
+  pesquisa:['ni-pesquisa','ni-pesquisa2'],
+  encomendas:['ni-encomendas','ni-encomendas2'],
+  moradores:['ni-moradores'],
+  porteiros:['ni-porteiros'],
+};
+
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg=document.getElementById('page-'+page);
+  if(pg) pg.classList.add('active');
+  (PAGE_NAV_MAP[page]||[]).forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('active'); });
+  if(page==='dashboard') renderDash();
+  if(page==='encomendas') renderEnc();
+  if(page==='moradores') renderMoradores('');
+  if(page==='porteiros') renderPorteiros();
+  if(page==='pesquisa'){ document.getElementById('srch-results').innerHTML='<div class="empty-state">Digite pelo menos 2 caracteres para buscar.</div>'; document.getElementById('srch-q').value=''; }
+}
+
+function updateBadges(){
+  const c=DB.encomendas.filter(e=>e.status==='pendente').length;
+  ['nb1','nb2'].forEach(id=>{ const el=document.getElementById(id); if(el){el.textContent=c; el.style.display=c?'':'none';} });
+}
+
+// ════════════════════════════════════════════════
+//  BLOCOS / APTOS
+// ════════════════════════════════════════════════
+function populateBlocoApto(){
+  const nb=DB.condo?.blocos||12;
+  const sb=document.getElementById('mor-bloco');
+  if(sb) sb.innerHTML=Array.from({length:nb},(_,i)=>`<option value="${i+1}">Bloco ${i+1}</option>`).join('');
+  const sa=document.getElementById('mor-apto');
+  if(sa) sa.innerHTML=APTOS.map(a=>`<option>${a}</option>`).join('');
+}
+
+// ════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════
+function renderDash(){
+  const hoje=new Date().toDateString();
+  const pend=DB.encomendas.filter(e=>e.status==='pendente').length;
+  const todayDone=DB.encomendas.filter(e=>e.status==='entregue'&&e.retiradaEm&&new Date(e.retiradaEm).toDateString()===hoje).length;
+  document.getElementById('d-pend').textContent=pend;
+  document.getElementById('d-hoje').textContent=todayDone;
+  document.getElementById('d-mor').textContent=DB.moradores.length;
+  document.getElementById('d-port').textContent=DB.usuarios.filter(u=>u.perfil==='porteiro'&&u.ativo).length;
+  document.getElementById('dash-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const rows=[...DB.encomendas].sort((a,b)=>new Date(b.chegadaEm)-new Date(a.chegadaEm)).slice(0,8);
+  document.getElementById('dash-rows').innerHTML=rows.length
+    ? rows.map(e=>`<tr>
+        <td><strong>${e.moradorNome}</strong></td>
+        <td style="white-space:nowrap">Bloco ${e.bloco} / ${e.apto}</td>
+        <td>${e.descricao}</td>
+        <td style="color:var(--muted);font-size:12px;white-space:nowrap">${fmtDate(e.chegadaEm)}</td>
+        <td><span class="badge ${e.status==='pendente'?'b-pend':'b-done'}">${e.status==='pendente'?'Pendente':'Entregue'}</span></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma encomenda registrada ainda.</td></tr>';
+}
+
+// ════════════════════════════════════════════════
+//  PESQUISA
+// ════════════════════════════════════════════════
+let srchTab='todos';
+
+function setSrchTab(t,el){ srchTab=t; document.querySelectorAll('.srch-tab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); doSearch(); }
+
+function doSearch(){
+  const q=norm(document.getElementById('srch-q').value.trim());
+  const el=document.getElementById('srch-results');
+  if(q.length<2){ el.innerHTML='<div class="empty-state">Digite pelo menos 2 caracteres para buscar.</div>'; return; }
+
+  let morRes=[], veiRes=[];
+  DB.moradores.forEach(m=>{
+    const nomeM=norm(m.nome).includes(q);
+    const locM=norm(`bloco${m.bloco}apto${m.apto}${m.bloco}${m.apto}`).includes(q);
+    const placaHits=m.veiculos.filter(v=>norm(v.placa).includes(q)||norm(v.modelo||'').includes(q));
+    if((srchTab==='todos'||srchTab==='moradores')&&(nomeM||locM)) morRes.push({...m,_hits:[]});
+    if((srchTab==='todos'||srchTab==='veiculos')&&placaHits.length){
+      const existing=morRes.find(r=>r.id===m.id);
+      if(existing) existing._hits=placaHits; else veiRes.push({...m,_hits:placaHits});
+    }
+  });
+
+  let html='';
+  if(morRes.length){ if(srchTab==='todos') html+=`<div class="sec-div">Moradores <span>${morRes.length}</span></div>`; morRes.forEach(m=>html+=resCard(m)); }
+  if(veiRes.length){ if(srchTab==='todos') html+=`<div class="sec-div">Veículos <span>${veiRes.length}</span></div>`; veiRes.forEach(m=>html+=resCard(m)); }
+  if(!morRes.length&&!veiRes.length) html='<div class="empty-state">Nenhum resultado encontrado.</div>';
+  el.innerHTML=html;
+}
+
+function resCard(m){
+  const pend=DB.encomendas.filter(e=>e.moradorId===m.id&&e.status==='pendente').length;
+  const vehs=m.veiculos.map(v=>{
+    const match=m._hits&&m._hits.some(h=>h.placa===v.placa);
+    const ico=v.tipo==='moto'?'◎':'▣';
+    return `<span class="plate${match?' plate-match':''}">${ico} ${v.placa}${v.modelo?' — '+v.modelo:''}</span>`;
+  }).join('');
+  const encLine=pend?`<div class="res-enc">${pend} encomenda${pend>1?'s':''} aguardando retirada</div>`:'';
+  const badgeEnc=pend?`<span class="badge b-pend">${pend}</span>`:`<span class="badge" style="background:var(--bg);color:var(--muted)">Sem pendência</span>`;
+  return `<div class="res-card" onclick="verMorador('${m.id}')">
+    <div class="res-top"><div><div class="res-name">${m.nome}</div><div class="res-apt">Bloco ${m.bloco} · Apto ${m.apto} · ${m.tel}</div></div>${badgeEnc}</div>
+    ${encLine}<div class="res-vehs">${vehs||'<span style="color:var(--muted);font-size:12px">Sem veículos cadastrados</span>'}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+//  ENCOMENDAS
+// ════════════════════════════════════════════════
+let encTab='pendentes', encEditId=null, retId=null;
+
+function setEncTab(t,el){ encTab=t; document.querySelectorAll('.tab-bar-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderEnc(); }
+
+function renderEnc(){
+  let list=DB.encomendas;
+  if(encTab==='pendentes') list=list.filter(e=>e.status==='pendente');
+  if(encTab==='entregues') list=list.filter(e=>e.status==='entregue');
+  list=[...list].sort((a,b)=>new Date(b.chegadaEm)-new Date(a.chegadaEm));
+  document.getElementById('enc-sub').textContent=`${list.length} encomenda${list.length!==1?'s':''}`;
+  const tbody=document.getElementById('enc-rows');
+  if(!list.length){ tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhuma encomenda nesta aba.</td></tr>`; return; }
+  tbody.innerHTML=list.map(e=>`<tr>
+    <td><strong>${e.moradorNome}</strong></td>
+    <td style="white-space:nowrap">Bloco ${e.bloco} / ${e.apto}</td>
+    <td>${e.descricao}${e.transportadora?`<div style="font-size:11px;color:var(--muted)">${e.transportadora}</div>`:''}</td>
+    <td style="font-size:12px;color:var(--muted);white-space:nowrap">${fmtDate(e.chegadaEm)}</td>
+    <td><span class="badge ${e.status==='pendente'?'b-pend':'b-done'}">${e.status==='pendente'?'Pendente':'Entregue'}</span>${e.status==='entregue'?`<div style="font-size:11px;color:var(--muted);margin-top:2px">por ${e.retiradaPor}</div>`:''}</td>
+    <td class="td-actions">${e.status==='pendente'
+      ?`<button class="btn btn-primary btn-sm" onclick="openRet('${e.id}')">Confirmar retirada</button>`
+      :`<span style="color:var(--muted);font-size:12px">Concluída</span>`
+    }${session?.perfil==='sindica'?`<button class="btn btn-ghost btn-sm" onclick="delEnc('${e.id}')"><svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/></svg></button>`:''}
+    </td>
+  </tr>`).join('');
+}
+
+function openNovaEnc(){
+  clearErrs();
+  document.getElementById('enc-srch').value='';
+  document.getElementById('enc-mor-id').value='';
+  document.getElementById('enc-desc').value='';
+  document.getElementById('enc-transp').value='';
+  document.getElementById('enc-obs').value='';
+  document.getElementById('enc-mor-sel').style.display='none';
+  document.getElementById('enc-dd').classList.remove('open');
+  openModal('m-enc');
+}
+
+function encSrchMor(v){
+  const dd=document.getElementById('enc-dd');
+  const q=norm(v);
+  if(q.length<2){ dd.classList.remove('open'); return; }
+  const hits=DB.moradores.filter(m=>norm(m.nome).includes(q)||norm(m.bloco+m.apto).includes(q)||norm(`bloco${m.bloco}`).includes(q)).slice(0,6);
+  if(!hits.length){ dd.classList.remove('open'); return; }
+  dd.innerHTML=hits.map(m=>`<div class="dropdown-item" onclick="selMorEnc('${m.id}')"><strong>${m.nome}</strong> <span>Bloco ${m.bloco} · Apto ${m.apto}</span></div>`).join('');
+  dd.classList.add('open');
+}
+
+function selMorEnc(id){
+  const m=DB.moradores.find(x=>x.id===id); if(!m) return;
+  document.getElementById('enc-mor-id').value=id;
+  document.getElementById('enc-srch').value='';
+  document.getElementById('enc-dd').classList.remove('open');
+  const sel=document.getElementById('enc-mor-sel');
+  sel.style.display=''; sel.innerHTML=`<strong>${m.nome}</strong> — Bloco ${m.bloco}, Apto ${m.apto} &nbsp;<span style="opacity:.7">${m.tel}</span>`;
+}
+
+function salvarEnc(){
+  clearErrs(); let ok=true;
+  const morId=document.getElementById('enc-mor-id').value;
+  const desc=document.getElementById('enc-desc').value.trim();
+  if(!morId){ toast('Selecione o morador','err'); return; }
+  if(!desc){ showErr('err-enc-desc'); ok=false; }
+  if(!ok) return;
+  const m=DB.moradores.find(x=>x.id===morId);
+  DB.encomendas.unshift({ id:uid(), moradorId:morId, moradorNome:m.nome, bloco:m.bloco, apto:m.apto,
+    descricao:desc, transportadora:document.getElementById('enc-transp').value.trim()||null,
+    obs:document.getElementById('enc-obs').value.trim()||null,
+    status:'pendente', chegadaEm:new Date().toISOString(), retiradaEm:null, retiradaPor:null,
+    registradoPor:session.id, notificacaoEnviada:true });
+  persist(); closeModal('m-enc'); updateBadges(); renderEnc();
+  toast(`Encomenda registrada. WhatsApp enviado para ${m.nome}.`,'ok');
+}
+
+function openRet(id){
+  retId=id;
+  const e=DB.encomendas.find(x=>x.id===id); if(!e) return;
+  clearErrs();
+  document.getElementById('ret-info').innerHTML=`<strong>${e.moradorNome}</strong><br>Bloco ${e.bloco} · Apto ${e.apto}<br><span style="color:var(--muted)">${e.descricao}</span><br><span style="font-size:12px;color:var(--muted)">Chegou em: ${fmtDate(e.chegadaEm)}</span>`;
+  document.getElementById('ret-por').value=e.moradorNome;
+  openModal('m-retirada');
+}
+
+function confirmarRet(){
+  clearErrs();
+  const por=document.getElementById('ret-por').value.trim();
+  if(!por){ showErr('err-ret-por'); return; }
+  const idx=DB.encomendas.findIndex(x=>x.id===retId); if(idx<0) return;
+  DB.encomendas[idx].status='entregue';
+  DB.encomendas[idx].retiradaEm=new Date().toISOString();
+  DB.encomendas[idx].retiradaPor=por;
+  persist(); closeModal('m-retirada'); updateBadges(); renderEnc();
+  toast('Retirada confirmada!','ok');
+}
+
+function delEnc(id){ confirmAction('Excluir encomenda','Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',()=>{ DB.encomendas=DB.encomendas.filter(e=>e.id!==id); persist(); renderEnc(); updateBadges(); toast('Encomenda excluída.'); }); }
+
+// ════════════════════════════════════════════════
+//  MORADORES
+// ════════════════════════════════════════════════
+let morEditId=null, morVeis=[], morEmgs=[];
+
+function renderMoradores(filter){
+  const q=norm(filter||'');
+  const list=DB.moradores.filter(m=>!q||norm(m.nome).includes(q)||norm(m.bloco+m.apto).includes(q)||norm(`bloco${m.bloco}`).includes(q));
+  document.getElementById('mor-sub').textContent=`${DB.moradores.length} morador${DB.moradores.length!==1?'es':''} cadastrado${DB.moradores.length!==1?'s':''}`;
+  const tbody=document.getElementById('mor-rows');
+  if(!list.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">${DB.moradores.length===0?'Nenhum morador cadastrado ainda. Clique em "Novo Morador" para começar.':'Nenhum resultado para a busca.'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=list.map(m=>{
+    const pend=DB.encomendas.filter(e=>e.moradorId===m.id&&e.status==='pendente').length;
+    const vehs=m.veiculos.slice(0,3).map(v=>`<span class="plate">${v.tipo==='moto'?'◎':'▣'} ${v.placa}</span>`).join(' ')+(m.veiculos.length>3?`<span style="color:var(--muted);font-size:11px">+${m.veiculos.length-3}</span>`:'');
+    return `<tr>
+      <td><strong>${m.nome}</strong></td>
+      <td>Bloco ${m.bloco}</td>
+      <td>${m.apto}</td>
+      <td style="font-size:12px">${m.tel}</td>
+      <td>${vehs||'<span style="color:var(--muted)">—</span>'}</td>
+      <td>${pend?`<span class="badge b-pend">${pend}</span>`:`<span style="color:var(--muted)">0</span>`}</td>
+      <td class="td-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openMorModal('${m.id}')">Editar</button>
+        <button class="btn btn-ghost btn-sm" onclick="verMorador('${m.id}')">Ver</button>
+        <button class="btn btn-ghost btn-sm" onclick="delMor('${m.id}')"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/></svg></button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function openMorModal(id){
+  clearErrs(); morEditId=id||null; morVeis=[]; morEmgs=[];
+  document.getElementById('m-mor-title').textContent=id?'Editar Morador':'Novo Morador';
+  populateBlocoApto();
+  if(id){
+    const m=DB.moradores.find(x=>x.id===id);
+    document.getElementById('mor-nome').value=m.nome;
+    document.getElementById('mor-bloco').value=m.bloco;
+    document.getElementById('mor-apto').value=m.apto;
+    document.getElementById('mor-tel').value=m.tel;
+    morVeis=m.veiculos.map(v=>({...v}));
+    morEmgs=m.emergencias.map(e=>({...e}));
+  } else {
+    document.getElementById('mor-nome').value='';
+    document.getElementById('mor-tel').value='';
+  }
+  renderSublist('sl-veiculos',morVeis,'vei');
+  renderSublist('sl-emg',morEmgs,'emg');
+  openModal('m-mor');
+}
+
+function renderSublist(elId,arr,type){
+  const el=document.getElementById(elId);
+  if(!arr.length){ el.innerHTML=`<div class="sublist-empty">${type==='vei'?'Nenhum veículo adicionado.':'Nenhum contato adicionado.'}</div>`; return; }
+  el.innerHTML=arr.map((item,i)=>`<div class="sublist-item">
+    <span>${type==='vei'?`<span class="plate">${item.tipo==='moto'?'◎':'▣'} ${item.placa}</span><span style="margin-left:5px;color:var(--muted)">${item.modelo||''}</span>`:`<strong>${item.nome}</strong><span style="margin-left:5px;color:var(--muted)">${item.tel}</span>`}</span>
+    <button class="btn btn-ghost btn-sm btn-icon" onclick="rmSub('${type}',${i})" title="Remover"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>`).join('');
+}
+
+function addVei(){
+  const p=document.getElementById('v-placa').value.trim().toUpperCase();
+  const m=document.getElementById('v-modelo').value.trim();
+  if(!p){ toast('Informe a placa','err'); return; }
+  const motos=['moto','cg','biz','fan','fazer','titan','nxr','pop','ninja','cb','cbr','mt','factor','crosser','lead','pcx','nc','brothers','intruder','kawasaki','yamaha'];
+  const tipo=motos.some(kw=>norm(m).includes(kw))?'moto':'carro';
+  morVeis.push({placa:p,modelo:m,tipo});
+  renderSublist('sl-veiculos',morVeis,'vei');
+  document.getElementById('v-placa').value=''; document.getElementById('v-modelo').value='';
+}
+
+function addEmg(){
+  const n=document.getElementById('e-nome').value.trim();
+  const t=document.getElementById('e-tel').value.trim();
+  if(!n||!t){ toast('Preencha nome e telefone','err'); return; }
+  morEmgs.push({nome:n,tel:t});
+  renderSublist('sl-emg',morEmgs,'emg');
+  document.getElementById('e-nome').value=''; document.getElementById('e-tel').value='';
+}
+
+function rmSub(type,i){ if(type==='vei'){ morVeis.splice(i,1); renderSublist('sl-veiculos',morVeis,'vei'); } else { morEmgs.splice(i,1); renderSublist('sl-emg',morEmgs,'emg'); } }
+
+function salvarMor(){
+  clearErrs(); let ok=true;
+  const nome=document.getElementById('mor-nome').value.trim();
+  const bloco=document.getElementById('mor-bloco').value;
+  const apto=document.getElementById('mor-apto').value;
+  const tel=document.getElementById('mor-tel').value.trim();
+  if(!nome){ showErr('err-mor-nome'); ok=false; }
+  if(!tel){ showErr('err-mor-tel'); ok=false; }
+  if(!ok) return;
+  if(morEditId){
+    const idx=DB.moradores.findIndex(x=>x.id===morEditId);
+    DB.moradores[idx]={...DB.moradores[idx],nome,bloco,apto,tel,veiculos:morVeis,emergencias:morEmgs,atualizadoEm:new Date().toISOString()};
+    toast('Morador atualizado com sucesso!','ok');
+  } else {
+    DB.moradores.push({id:uid(),nome,bloco,apto,tel,veiculos:morVeis,emergencias:morEmgs,ativo:true,criadoEm:new Date().toISOString()});
+    toast('Morador cadastrado com sucesso!','ok');
+  }
+  persist(); closeModal('m-mor'); renderMoradores('');
+}
+
+function delMor(id){
+  const m=DB.moradores.find(x=>x.id===id); if(!m) return;
+  confirmAction('Excluir morador',`Excluir <strong>${m.nome}</strong>? As encomendas registradas serão mantidas no histórico.`,()=>{
+    DB.moradores=DB.moradores.filter(x=>x.id!==id);
+    persist(); renderMoradores(''); toast('Morador removido.');
+  });
+}
+
+function verMorador(id){
+  const m=DB.moradores.find(x=>x.id===id); if(!m) return;
+  const pend=DB.encomendas.filter(e=>e.moradorId===id&&e.status==='pendente');
+  document.getElementById('vm-nome').textContent=m.nome;
+  document.getElementById('vm-body').innerHTML=`
+    <div class="det-sec-title">Dados pessoais</div>
+    <div class="det-grid">
+      <div class="det-f"><div class="det-l">Bloco</div><div class="det-v">Bloco ${m.bloco}</div></div>
+      <div class="det-f"><div class="det-l">Apartamento</div><div class="det-v">${m.apto}</div></div>
+      <div class="det-f"><div class="det-l">Telefone</div><div class="det-v">${m.tel}</div></div>
+      <div class="det-f"><div class="det-l">Encomendas pendentes</div><div class="det-v" style="color:${pend.length?'var(--warn)':'var(--accent)'}">${pend.length}</div></div>
+    </div>
+    ${m.veiculos.length?`<div class="det-sec-title">Veículos</div><div class="sublist">${m.veiculos.map(v=>`<div class="sublist-item"><span class="plate">${v.tipo==='moto'?'◎':'▣'} ${v.placa}</span><span style="color:var(--muted)">${v.modelo||''}</span></div>`).join('')}</div>`:''}
+    ${m.emergencias.length?`<div class="det-sec-title">Contatos de emergência</div><div class="sublist">${m.emergencias.map(e=>`<div class="sublist-item"><span>${e.nome}</span><span style="color:var(--muted)">${e.tel}</span></div>`).join('')}</div>`:''}
+    ${pend.length?`<div class="det-sec-title">Encomendas pendentes</div><div class="sublist">${pend.map(e=>`<div class="sublist-item"><span>${e.descricao}</span><span style="color:var(--muted);font-size:12px">${fmtDateShort(e.chegadaEm)}</span></div>`).join('')}</div>`:''}
+  `;
+  document.getElementById('vm-edit-btn').onclick=()=>{ closeModal('m-ver-mor'); openMorModal(id); };
+  openModal('m-ver-mor');
+}
+
+// ════════════════════════════════════════════════
+//  PORTEIROS
+// ════════════════════════════════════════════════
+let portEditId=null;
+
+function renderPorteiros(){
+  const list=DB.usuarios.filter(u=>u.perfil==='porteiro');
+  const tbody=document.getElementById('port-rows');
+  if(!list.length){ tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhum porteiro cadastrado. Clique em "Novo Porteiro" para adicionar.</td></tr>`; return; }
+  tbody.innerHTML=list.map(p=>`<tr>
+    <td><strong>${p.nome}</strong></td>
+    <td style="font-size:12px;color:var(--muted)">${p.email}</td>
+    <td style="text-transform:capitalize;font-size:13px">${p.turno}</td>
+    <td><span class="badge ${p.ativo?'b-active':'b-inactive'}">${p.ativo?'Ativo':'Inativo'}</span></td>
+    <td style="font-size:12px;color:var(--muted)">${fmtDateShort(p.criadoEm)}</td>
+    <td class="td-actions">
+      <button class="btn btn-secondary btn-sm" onclick="openPortModal('${p.id}')">Editar</button>
+      <button class="btn btn-ghost btn-sm" onclick="togglePort('${p.id}')">${p.ativo?'Desativar':'Ativar'}</button>
+      <button class="btn btn-ghost btn-sm btn-icon" onclick="delPort('${p.id}')"><svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/></svg></button>
+    </td>
+  </tr>`).join('');
+}
+
+function openPortModal(id){
+  clearErrs(); portEditId=id||null;
+  document.getElementById('m-port-title').textContent=id?'Editar Porteiro':'Novo Porteiro';
+  document.getElementById('field-port-senha').style.display=id?'none':'';
+  if(id){
+    const p=DB.usuarios.find(x=>x.id===id);
+    document.getElementById('port-nome').value=p.nome;
+    document.getElementById('port-email').value=p.email;
+    document.getElementById('port-turno').value=p.turno;
+  } else {
+    document.getElementById('port-nome').value='';
+    document.getElementById('port-email').value='';
+    document.getElementById('port-senha').value='';
+    document.getElementById('port-turno').value='diurno';
+  }
+  openModal('m-port');
+}
+
+function salvarPort(){
+  clearErrs(); let ok=true;
+  const nome=document.getElementById('port-nome').value.trim();
+  const email=document.getElementById('port-email').value.trim().toLowerCase();
+  const senha=document.getElementById('port-senha').value;
+  const turno=document.getElementById('port-turno').value;
+  if(!nome){ showErr('err-port-nome'); ok=false; }
+  if(!validEmail(email)){ showErr('err-port-email'); ok=false; }
+  if(!portEditId&&senha.length<6){ showErr('err-port-senha'); ok=false; }
+  if(!ok) return;
+  if(portEditId){
+    const idx=DB.usuarios.findIndex(x=>x.id===portEditId);
+    DB.usuarios[idx]={...DB.usuarios[idx],nome,email,turno};
+    toast('Porteiro atualizado!','ok');
+  } else {
+    const exists=DB.usuarios.find(u=>u.email===email);
+    if(exists){ showErr('err-port-email','E-mail já cadastrado'); return; }
+    DB.usuarios.push({id:uid(),nome,email,pwdHash:hashPwd(senha),perfil:'porteiro',turno,ativo:true,criadoEm:new Date().toISOString(),criadoPor:session.id});
+    toast(`Porteiro ${nome} cadastrado com sucesso!`,'ok');
+  }
+  persist(); closeModal('m-port'); renderPorteiros();
+}
+
+function togglePort(id){
+  const idx=DB.usuarios.findIndex(x=>x.id===id); if(idx<0) return;
+  DB.usuarios[idx].ativo=!DB.usuarios[idx].ativo;
+  persist(); renderPorteiros();
+  toast(`Porteiro ${DB.usuarios[idx].ativo?'ativado':'desativado'}.`);
+}
+
+function delPort(id){
+  const p=DB.usuarios.find(x=>x.id===id); if(!p) return;
+  confirmAction('Excluir porteiro',`Excluir <strong>${p.nome}</strong>? O acesso ao sistema será removido.`,()=>{
+    DB.usuarios=DB.usuarios.filter(x=>x.id!==id);
+    persist(); renderPorteiros(); toast('Porteiro removido.');
+  });
+}
+
+// ════════════════════════════════════════════════
+//  CONFIRM DIALOG
+// ════════════════════════════════════════════════
+function confirmAction(title,msg,cb){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-msg').innerHTML=msg;
+  const btn=document.getElementById('confirm-ok');
+  const newBtn=btn.cloneNode(true); btn.parentNode.replaceChild(newBtn,btn);
+  newBtn.addEventListener('click',()=>{ closeModal('m-confirm'); cb(); });
+  openModal('m-confirm');
+}
+
+// ════════════════════════════════════════════════
+//  EVENTS
+// ════════════════════════════════════════════════
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.modal-ov.open').forEach(m=>m.classList.remove('open')); });
+document.querySelectorAll('.modal-ov').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); }));
+['login-email','login-senha'].forEach(id=>{ document.getElementById(id)?.addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); }); });
+document.getElementById('enc-srch')?.addEventListener('blur',()=>{ setTimeout(()=>document.getElementById('enc-dd').classList.remove('open'),200); });
+
+// ════════════════════════════════════════════════
+//  START
+// ════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
