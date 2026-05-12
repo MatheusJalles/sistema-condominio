@@ -48,4 +48,4 @@ Condomínios geralmente dependem de planilhas ou grupos de WhatsApp para organiz
 ## 👨‍💻 Autor
 
 **Matheus Jalles** — Desenvolvedor Front-End | ADS · PUC Minas  
-[mtjales@gmail.com](mailto:mtjales@gmail.com)
+[contato.matheusjalles@gmail.com](mailto:contato.matheusjalles@gmail.com)
