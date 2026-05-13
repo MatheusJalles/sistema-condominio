@@ -41,7 +41,7 @@ Condomínios geralmente dependem de planilhas ou grupos de WhatsApp para organiz
 ## 🔗 Links
 
 - 👤 [Portfólio](https://matheusjalles.github.io/portfolio)
-- 💼 [LinkedIn](https://www.linkedin.com/in/matheus-jalles-3078881a8/)
+- 💼 [LinkedIn]((https://www.linkedin.com/in/matheus-jalles )
 
 ---
 
